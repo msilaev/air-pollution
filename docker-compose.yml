@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  # PostgreSQL for MLflow and Prefect
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_DB: mlflow
+      POSTGRES_USER: mlflow
+      POSTGRES_PASSWORD: mlflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mlflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MLflow Tracking Server
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://mlflow:mlflow@postgres:5432/mlflow
+      --default-artifact-root s3://your-mlflow-bucket/artifacts
+      --host 0.0.0.0
+      --port 5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+
+  # Prefect Server
+  prefect-server:
+    image: prefecthq/prefect:2-latest
+    command: prefect server start --host 0.0.0.0
+    ports:
+      - "4200:4200"
+    environment:
+      - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://mlflow:mlflow@postgres:5432/mlflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Prefect Worker
+  prefect-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.prefect
+    command: prefect worker start --pool default-agent-pool
+    depends_on:
+      - prefect-server
+    environment:
+      - PREFECT_API_URL=http://prefect-server:4200/api
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+    volumes:
+      - ./data:/app/data
+      - ./mlruns:/app/mlruns
+
+  # Air Pollution API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mlflow
+      - postgres
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - USE_S3=${USE_S3:-false}
+    volumes:
+      - ./data:/app/data
+      - ./mlruns:/app/mlruns
+
+  # Streamlit Dashboard
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    environment:
+      - API_BASE_URL=http://api:8000/api/v1
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  # Monitoring with Grafana (existing)
+  grafana:
+    image: grafana/grafana-enterprise
+    user: "472"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config/grafana_datasources.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro
+      - ./config/grafana_dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ./dashboards:/opt/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: example
+
+volumes:
+  postgres_data:
+  redis_data:
+  grafana_data:

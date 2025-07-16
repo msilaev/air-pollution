@@ -182,16 +182,16 @@ cython_debug/
 # Data files
 *.csv
 *.parquet
-data/raw/
-data/interim/
-data/processed/
+#data/raw/
+#data/interim/
+#data/processed/
 
 # MLflow artifacts
 mlruns/
 mlflow.db
 
 # Model artifacts
-models/
+#models/
 artifacts/
 
 # Terraform installation files

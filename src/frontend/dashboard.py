@@ -522,7 +522,7 @@ class AirPollutionDashboard:
         fig.update_layout(
             mapbox_style="open-street-map",
             margin={"r": 0, "t": 50, "l": 0, "b": 0},
-            coloraxis_colorbar=dict(title="PM10 (μg/m³)", titleside="right"),
+            coloraxis_colorbar=dict(title="PM10 (μg/m³)"),  # <-- FIXED: removed titleside
         )
 
         return fig
@@ -750,11 +750,11 @@ class AirPollutionDashboard:
                     display_columns = [
                         col for col in columns_to_show if col in display_pred.columns
                     ]
-                    st.dataframe(
-                        display_pred[display_columns],
-                        use_container_width=True,
-                        hide_index=True,
-                    )
+                    # st.dataframe(
+                    #     display_pred[display_columns],
+                    #     use_container_width=True
+                    #     #hide_index=True,
+                    # )
 
                 with col2:
                     if df_historical is not None and not df_historical.empty:
@@ -771,11 +771,11 @@ class AirPollutionDashboard:
                             for col in columns_to_show
                             if col in display_hist.columns
                         ]
-                        st.dataframe(
-                            display_hist[display_columns],
-                            use_container_width=True,
-                            hide_index=True,
-                        )
+                        # st.dataframe(
+                        #     display_hist[display_columns],
+                        #     use_container_width=True
+                        #     #hide_index=True,
+                        # )
                     else:
                         st.write("**No historical data available**")
 
@@ -909,13 +909,17 @@ class AirPollutionDashboard:
 
         # Get all pollutants from both datasets
         pollutants = set(df_predictions["pollutant"].unique())
-        if df_historical is not None and df_historical.empty:
+        if df_historical is not None and not df_historical.empty:
             pollutants.update(df_historical["pollutant"].unique())
 
         # Color palette for stations
         station_colors = px.colors.qualitative.Set1
 
-        for pollutant in sorted(pollutants):
+        #print(pollutants)
+
+        for pollutant in sorted(pollutants, reverse=True):
+
+            #print("Plotting pollutant:", pollutant)
             st.subheader(f"🌫️ {pollutant} - All Stations")
 
             fig = go.Figure()
@@ -1016,6 +1020,8 @@ class AirPollutionDashboard:
                         f"Warning: Could not add prediction start line for {pollutant}: {e}"
                     )
 
+            #print(f"Plotting {pollutant} for {len(all_stations)} stations")
+
             fig.update_layout(
                 title=f"{pollutant} - All Monitoring Stations",
                 xaxis_title="Time",
@@ -1027,20 +1033,30 @@ class AirPollutionDashboard:
                 ),
             )
 
+            #print(f"Plotting {pollutant} for {len(all_stations)} stations end")
+
             st.plotly_chart(fig, use_container_width=True)
+
+            #print(f"Plotting {pollutant} for {len(all_stations)} stations end")
 
             # Show station summary for this pollutant
             if not df_predictions.empty:
+                
                 st.write(f"**Stations with data for {pollutant}:** {len(all_stations)}")
 
                 # Create summary table for this pollutant
                 summary_data = []
+                
                 for station in all_stations:
+                    
+                    #print(f"Processing station: {station} for pollutant: {pollutant}")
                     pred_station_data = df_predictions[
                         (df_predictions["pollutant"] == pollutant)
                         & (df_predictions["station"] == station)
                     ]
 
+                    #print(f"Processing station: {station} for pollutant: {pollutant}")
+                    
                     if not pred_station_data.empty:
                         avg_pred = pred_station_data["value"].mean()
                         max_pred = pred_station_data["value"].max()
@@ -1055,9 +1071,14 @@ class AirPollutionDashboard:
                             }
                         )
 
+                    #print(f"Processing station: {station} for pollutant: {pollutant} end")
+
                 if summary_data:
+                    #print(f"Adding summary for pollutant: {pollutant} start")
                     df_summary = pd.DataFrame(summary_data)
-                    st.dataframe(df_summary, use_container_width=True, hide_index=True)
+                    #st.dataframe(df_summary, use_container_width=True, hide_index=True)
+                    #st.dataframe(df_summary, use_container_width=True)
+                    #print(f"Adding summary for pollutant: {pollutant} end")
 
     def plot_comparison_view_separate(self, df_predictions, df_historical):
         """Plot comparison between historical trends and predictions"""
@@ -1204,7 +1225,7 @@ class AirPollutionDashboard:
 
             if comparison_data:
                 df_comparison = pd.DataFrame(comparison_data)
-                st.dataframe(df_comparison, use_container_width=True, hide_index=True)
+                #st.dataframe(df_comparison, use_container_width=True) #, hide_index=True)
 
     def render_data_collection_tab(self):
         """Render data collection tab for training dataset creation"""

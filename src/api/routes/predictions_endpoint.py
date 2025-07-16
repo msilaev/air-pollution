@@ -1,14 +1,24 @@
 import logging
 from datetime import datetime
+import os
 
 from fastapi import APIRouter, HTTPException
-from mlflow import MlflowClient
+from mlflow import MlflowClient, set_tracking_uri
 
 from src.api.schemas import PredictionResponse
 from src.config import USE_S3
 from src.data.data_ingestion import DataIngestion
 from src.data.data_loader import DataLoader
 from src.models.pollution_predictor import PollutionPredictor
+
+# Set MLflow tracking URI based on USE_S3
+if USE_S3:
+    # Use S3/remote tracking URI from environment or config
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+else:
+    # Use local SQLite DB for MLflow
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db")
+set_tracking_uri(tracking_uri)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

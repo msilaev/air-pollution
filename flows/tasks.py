@@ -177,12 +177,13 @@ def check_data_quality_task(data_type: str = "training") -> Dict[str, Any]:
             )
             * 100,
             "duplicate_rows": df.duplicated().sum(),
-            "timestamp_range": {
-                "start": (
-                    df.index.min().isoformat() if hasattr(df.index, "min") else None
-                ),
-                "end": df.index.max().isoformat() if hasattr(df.index, "max") else None,
-            },
+            "timestamp_range": {  "start": (
+        df.index.min().isoformat() if hasattr(df.index.min(), "isoformat") else df.index.min()
+    ),
+    "end": (
+        df.index.max().isoformat() if hasattr(df.index.max(), "isoformat") else df.index.max()
+    ),
+},
         }
 
         # Quality thresholds

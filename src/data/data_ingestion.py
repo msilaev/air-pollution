@@ -24,6 +24,8 @@ class DataIngestion:
         self.logger = logging.getLogger(__name__)
         self.address = address
         self.use_s3 = use_s3
+
+        print(f"DataIngestion initialized with use_s3={self.use_s3}, address={self.address}")
         if use_s3:
             self.s3_client = boto3.client("s3")
             self.bucket = os.environ.get("AWS_S3_DATA_BUCKET", "air-pollution-data")

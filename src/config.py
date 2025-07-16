@@ -19,4 +19,4 @@ MODELS_DIR = PROJ_ROOT / "models"
 REPORTS_DIR = PROJ_ROOT / "reports"
 FIGURES_DIR = REPORTS_DIR / "figures"
 SPLIT_DATE = "2023-01-01"
-USE_S3 = True
+USE_S3 = False

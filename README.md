@@ -2,6 +2,8 @@
 
 This is an end-to-end project following MLOPS practices on automation of data collection, model training and deployment. The goal is to predict air pullution indicators in Helsinki, Finland using the open-sourse real-time data from the air quality measuring stations.
 
+## Note for mlops zoomcamp evaluators: Please use the latest commit, some bugs noticed at the last moment has been corrected
+
 ## Table of Contents
 - [Resources](#resources)
 - [Project Structure](#project-structure)
@@ -118,6 +120,19 @@ AWS_S3_DATA_BUCKET=your-bucket-name
 PYTHONPATH=.
 ```
 
+##### S3 Data and Artifact Storage
+
+The use of AWS S3 for storing data and model artifacts is controlled by the `USE_S3` flag in `src/config.py`:
+
+```python
+USE_S3 = False  # Set to True to enable S3 storage for data and artifacts
+```
+
+- When `USE_S3 = True`, the application will read from and write to S3 buckets as configured in your environment variables.
+- When `USE_S3 = False`, all data and artifacts will be stored locally in the `data/` and `models/` directories.
+
+Update this flag according to your deployment or development needs.
+
 #### 5. Verify Installation
 ```bash
 # Run tests to verify everything is working
@@ -129,11 +144,11 @@ python -c "from src.models.pollution_predictor import PollutionPredictor; print(
 
 ### Quick Start
 ```bash
-# Train a model (if you have data)
-python -m src.models.train
-
 # Start the API server
 python -m src.api.app
+
+# Start the Streamlit dashboard
+streamlit run src/frontend/dashboard.py
 
 # Start Prefect orchestration server
 prefect server start
@@ -250,6 +265,23 @@ The tests focus on:
 - Tests use mocking to avoid requiring actual AWS credentials or MLflow servers
 - Some PyArrow compatibility warnings may appear on Windows but don't affect test results
 - The test suite is designed to run in CI/CD environments without external dependencies
+
+## Frontend: Streamlit Dashboard
+
+The project includes an interactive dashboard for visualizing air pollution predictions and data. You can run the dashboard locally using Streamlit.
+
+### Start the Dashboard (Frontend)
+
+From the project root, run:
+
+```bash
+streamlit run src/frontend/dashboard.py
+```
+
+- The dashboard will be available at: http://localhost:8501
+- Make sure your API server is running if the dashboard depends on live predictions.
+
+
 
 ## Orchestration with Prefect
 

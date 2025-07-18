@@ -100,6 +100,10 @@ source venv/bin/activate
 # Install core dependencies
 pip install -r requirements.txt
 
+# Make sure these packages are included in requirements.txt:
+# - griffe (required for Prefect worker)
+# - geopy (required for API)
+
 # For development (includes testing and linting tools)
 pip install -r requirements-dev.txt  # if available
 ```
@@ -160,22 +164,39 @@ python -m src.data.data_ingestion
 python -c "from flows.main_flows import training_pipeline_flow; training_pipeline_flow()"
 ```
 
-### Docker Installation (Alternative)
-```bash
-# Build the Docker image
-docker build -t air-pollution-app .
 
-# Run the container
-docker run -p 8000:8000 air-pollution-app
+### Docker Installation & Orchestration 
+> **Note:** Before starting, replace `docker-compose-template.yml` with `docker-compose.yml` and fill in your real AWS credentials in the environment variables section.
+
+#### 1. Build and start all services with Docker Compose:
+```powershell
+docker compose build
+docker compose up -d
 ```
 
-### Troubleshooting
+#### 2. Register a Prefect flow as a deployment (example: full MLOps pipeline):
+```powershell
+docker compose exec prefect-worker prefect deployment build flows/main_flows.py:full_mlops_pipeline_flow -n full-mlops-deployment
+docker compose exec prefect-worker prefect deployment apply full_mlops_pipeline_flow-deployment.yaml
+```
+- Replace `full_mlops_pipeline_flow` with another flow name if needed (see `flows/main_flows.py`).
 
-#### Common Issues:
-- **PyArrow warnings on Windows**: These are compatibility warnings and don't affect functionality
-- **MLflow connection errors**: Ensure `MLFLOW_TRACKING_URI` is set correctly
-- **Import errors**: Make sure `PYTHONPATH=.` is set in your environment
-- **AWS access issues**: Verify your AWS credentials and bucket permissions
+#### 3. Access the Prefect UI:
+- Open [http://localhost:4200](http://localhost:4200) in your browser.
+- You will see your registered deployments and can trigger flow runs from the UI.
+
+#### 4. Access other services:
+- **Streamlit dashboard:** [http://localhost:8501](http://localhost:8501)
+- **API (FastAPI):** [http://localhost:8000](http://localhost:8000)
+- **MLflow Tracking UI:** [http://localhost:5000](http://localhost:5000)
+
+#### 5. Manual flow run (optional):
+You can also run a flow manually inside the worker container:
+```powershell
+docker compose exec prefect-worker python -m flows.main_flows
+```
+
+---
 
 ## Testing
 
@@ -508,6 +529,38 @@ prefect flow-run ls --limit 10
 - [Task Run Monitoring](https://docs.prefect.io/concepts/tasks/)
 
 ## Deployment
+
+### Running the Full Stack and Prefect Flows
+
+1. **Build and start all services with Docker Compose:**
+   ```powershell
+   docker compose build
+   docker compose up -d
+   ```
+
+2. **Register a Prefect flow as a deployment (example: full MLOps pipeline):**
+   ```powershell
+   docker compose exec prefect-worker prefect deployment build flows/main_flows.py:full_mlops_pipeline_flow -n full-mlops-deployment
+   docker compose exec prefect-worker prefect deployment apply full_mlops_pipeline_flow-deployment.yaml
+   ```
+   - Replace `full_mlops_pipeline_flow` with another flow name if needed (see `flows/main_flows.py`).
+
+3. **Access the Prefect UI:**
+   - Open [http://localhost:4200](http://localhost:4200) in your browser.
+   - You will see your registered deployments and can trigger flow runs from the UI.
+
+4. **Access other services:**
+   - **Streamlit dashboard:** [http://localhost:8501](http://localhost:8501)
+   - **API (FastAPI):** [http://localhost:8000](http://localhost:8000)
+   - **MLflow Tracking UI:** [http://localhost:5000](http://localhost:5000)
+
+5. **Manual flow run (optional):**
+   You can also run a flow manually inside the worker container:
+   ```powershell
+   docker compose exec prefect-worker python -m flows.main_flows
+   ```
+
+---
 
 This project supports multiple deployment options, with a comprehensive AWS cloud deployment using Terraform for infrastructure as code.
 

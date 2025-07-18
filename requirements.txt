@@ -1,3 +1,9 @@
+# Required for XML parsing in API
+defusedxml
+# Required for Prefect worker
+griffe==0.36.0
+# Required for API
+geopy
 # Core dependencies
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0

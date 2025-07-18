@@ -70,7 +70,7 @@ async def train_model():
                 detail=f"Insufficient data for training. Need at least {min_required_rows} rows, got {len(df)}.",
             )
 
-        print(f"Loaded data with shape: {df.shape}")
+        #print(f"Loaded data with shape: {df.shape}")
 
         # Train the model
         metrics = predictor.train(df)
@@ -126,7 +126,7 @@ async def predict_pollution(fetch_fresh_data: bool = False):
                 detail=f"Insufficient data for predictions. Need at least {min_required_rows} rows, got {len(df)}. Please refresh the data.",
             )
 
-        print(f"Loaded data with shape: {df.shape}")
+        #print(f"Loaded data with shape: {df.shape}")
 
         # Load model if not already loaded
         if not predictor.model:

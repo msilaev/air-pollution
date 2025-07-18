@@ -14,17 +14,14 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies including Prefect
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install prefect
+RUN pip install prefect==2.14.20
 
-# Copy application code
 COPY . .
 
-# Create non-root user for security
 RUN useradd --create-home --shell /bin/bash app \
     && chown -R app:app /app
 USER app
 
-# Run Prefect worker
+ENV PREFECT_API_URL=http://prefect-server:4200/api
 CMD ["prefect", "worker", "start", "--pool", "default-agent-pool"]

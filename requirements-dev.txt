@@ -1,6 +1,9 @@
 # Development dependencies for air pollution prediction project
 # Install with: pip install -r requirements-dev.txt
+# Required for XML parsing in API
+defusedxml
 
+griffe
 # Code quality and formatting
 pre-commit==3.6.0
 black==23.12.1

@@ -78,7 +78,7 @@ class PollutionPredictor:
         df = df.copy()
         df["Timestamp"] = pd.to_datetime(df["Timestamp"])
 
-        print(df.columns)
+        #print(df.columns)
 
         # Extract pollution features (PM10, PM2.5)
         self.features_pollution = [
@@ -96,8 +96,8 @@ class PollutionPredictor:
         df["day_sin"] = np.sin(2 * np.pi * days_of_week / 7)
         df["day_cos"] = np.cos(2 * np.pi * days_of_week / 7)
 
-        for feature in self.features_pollution:
-            print(df[feature].head())
+        #for feature in self.features_pollution:
+        #    print(df[feature].head())
 
         df.fillna(method="ffill", inplace=True)
         df.fillna(method="bfill", inplace=True)
@@ -140,7 +140,7 @@ class PollutionPredictor:
 
     def train(self, df):
         """Train model using your exact approach"""
-        print(f"Training model with data shape: {df.shape}")
+        #print(f"Training model with data shape: {df.shape}")
 
         # Prepare sequences
         with mlflow.start_run() as run:

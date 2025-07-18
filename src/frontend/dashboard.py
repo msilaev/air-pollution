@@ -14,7 +14,8 @@ st.set_page_config(page_title="Air Pollution Predictor", page_icon="🌍", layou
 
 class AirPollutionDashboard:
     def __init__(self):
-        self.api_base_url = "http://localhost:8000/api/v1"
+        import os
+        self.api_base_url = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 
         # Station coordinates from your data collection
         self.station_coordinates = {

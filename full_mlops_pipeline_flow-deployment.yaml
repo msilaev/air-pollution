@@ -3,7 +3,7 @@
 ###
 name: full-mlops-deployment
 description: Complete MLOps pipeline with monitoring and automatic retraining
-version: e3635b5af7037c01af3215bf03f319de
+version: 681faa43be0a944f75bcff397a9a7d0b
 # The work queue that will handle this deployment's runs
 work_queue_name: default
 work_pool_name: default-agent-pool
@@ -26,14 +26,14 @@ infrastructure:
   command: null
   stream_output: true
   working_dir: null
-  _block_document_id: 718e295c-7dfc-46a2-9bf1-ee416a4708e4
-  _block_document_name: anonymous-380288ad-db86-4ac1-acbb-f47bacb64086
+  _block_document_id: 96dac1cd-57ac-4b6e-bd80-2d552ad34368
+  _block_document_name: anonymous-bb31d991-c984-4585-a4c1-68be4386eff9
   _is_anonymous: true
   block_type_slug: process
   _block_type_slug: process
 storage: null
-path: /app/flows
-entrypoint: flows\main_flows.py:full_mlops_pipeline_flow
+path: /app
+entrypoint: flows/main_flows.py:full_mlops_pipeline_flow
 parameter_openapi_schema:
   title: Parameters
   type: object
@@ -70,6 +70,6 @@ parameter_openapi_schema:
       type: boolean
   required: null
   definitions: null
-timestamp: '2025-07-22T13:48:26.016428+00:00'
+timestamp: '2025-07-22T20:37:39.714489+00:00'
 triggers: []
 enforce_parameter_schema: null

@@ -18,13 +18,13 @@ from flows.tasks import (
 
 logger = logging.getLogger(__name__)
 
-
 @flow(
     name="training_pipeline",
     description="Complete training pipeline: data collection → training → validation",
     task_runner=SequentialTaskRunner(),
     retries=1,
 )
+
 def training_pipeline_flow(
     chunk_size_hours: int = 168,  # 1 week
     week_number: int = 2,
@@ -38,10 +38,8 @@ def training_pipeline_flow(
         week_number: Which week of data to collect (1-8)
         force_refresh: Whether to force fresh data collection
     """
-
-    logger.info(
-        f"Starting training pipeline: week={week_number}, chunk_size={chunk_size_hours}h"
-    )
+    logger.info("Starting training pipeline: week=%s, chunk_size=%sh", 
+                week_number, chunk_size_hours)
 
     # Step 1: Collect training data
     data_collection_result = collect_training_data_task(
@@ -76,7 +74,6 @@ def training_pipeline_flow(
             "pipeline_status": "failed_quality_check",
             "timestamp": datetime.now().isoformat(),
         }
-
 
 @flow(
     name="prediction_pipeline",
@@ -131,6 +128,8 @@ def monitoring_pipeline_flow():
     training_quality = check_data_quality_task(data_type="training")
     prediction_quality = check_data_quality_task(data_type="predicting")
 
+    train_result = train_model_task()
+
     # Validate current model
     model_validation = validate_model_task()
 
@@ -158,7 +157,8 @@ def monitoring_pipeline_flow():
         "timestamp": datetime.now().isoformat(),
     }
 
-    logger.info(f"Monitoring completed. Retrain needed: {retrain_needed}")
+    logger.info(f"Monitoring completed. Model metrics: {train_result}. "
+                f"Retrain needed: {retrain_needed}")
 
     # Trigger retraining if needed
     if retrain_needed:

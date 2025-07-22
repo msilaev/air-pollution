@@ -186,6 +186,7 @@ docker compose exec prefect-worker prefect deployment apply full_mlops_pipeline_
 # Start a Prefect worker to execute scheduled and manual flow runs
 ```powershell
 docker compose exec prefect-worker prefect worker start -p default-agent-pool
+# Start the Prefect worker after registering and applying the deployment above. This command will execute scheduled and manual flow runs.
 ```
  Replace `full_mlops_pipeline_flow` with another flow name if needed (see `flows/main_flows.py`).
 

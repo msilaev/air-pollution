@@ -15,7 +15,6 @@ from src.models.pollution_predictor import PollutionPredictor
 
 logger = logging.getLogger(__name__)
 
-
 @task(name="collect_training_data", retries=2)
 def collect_training_data_task(
     chunk_size_hours: int = 168,  # 1 week
@@ -25,7 +24,8 @@ def collect_training_data_task(
     """Task to collect training data"""
     try:
         logger.info(
-            f"Starting training data collection: week={week_number}, chunk_size={chunk_size_hours}h"
+            "Starting training data collection: week=%s, " \
+            "chunk_size=%sh", week_number, chunk_size_hours
         )
 
         data_ingestion = DataIngestion(use_s3=USE_S3)
@@ -48,16 +48,14 @@ def collect_training_data_task(
         logger.error(f"Training data collection failed: {e}")
         raise e
 
-
 @task(name="collect_prediction_data", retries=2)
 def collect_prediction_data_task(
     chunk_size_hours: int = 48, week_number: int = 1
 ) -> Dict[str, Any]:
     """Task to collect prediction data"""
     try:
-        logger.info(
-            f"Starting prediction data collection: week={week_number}, chunk_size={chunk_size_hours}h"
-        )
+        logger.info("Starting prediction data collection: week=%s, " \
+        "chunk_size=%sh", week_number, chunk_size_hours)
 
         data_ingestion = DataIngestion(use_s3=USE_S3)
         data_ingestion.fetch_pollution_data(
@@ -78,7 +76,6 @@ def collect_prediction_data_task(
     except Exception as e:
         logger.error(f"Prediction data collection failed: {e}")
         raise e
-
 
 @task(name="train_model", retries=1)
 def train_model_task() -> Dict[str, Any]:

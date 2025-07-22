@@ -162,8 +162,10 @@ python -m src.data.data_ingestion
 
 # Run orchestrated training pipeline
 python -c "from flows.main_flows import training_pipeline_flow; training_pipeline_flow()"
-```
 
+# Run orchestrated full pipeline
+python -c "from flows.main_flows import full_mlops_pipeline_flow; full_mlops_pipeline_flow()"
+```
 
 ### Docker Installation & Orchestration
 > **Note:** Before starting, replace `docker-compose-template.yml` with `docker-compose.yml` and fill in your real AWS credentials in the environment variables section.
@@ -177,9 +179,15 @@ docker compose up -d
 #### 2. Register a Prefect flow as a deployment (example: full MLOps pipeline):
 ```powershell
 docker compose exec prefect-worker prefect deployment build flows/main_flows.py:full_mlops_pipeline_flow -n full-mlops-deployment
+
 docker compose exec prefect-worker prefect deployment apply full_mlops_pipeline_flow-deployment.yaml
 ```
-- Replace `full_mlops_pipeline_flow` with another flow name if needed (see `flows/main_flows.py`).
+
+# Start a Prefect worker to execute scheduled and manual flow runs
+```powershell
+docker compose exec prefect-worker prefect worker start -p default-agent-pool
+```
+ Replace `full_mlops_pipeline_flow` with another flow name if needed (see `flows/main_flows.py`).
 
 #### 3. Access the Prefect UI:
 - Open [http://localhost:4200](http://localhost:4200) in your browser.

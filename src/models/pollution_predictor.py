@@ -95,8 +95,8 @@ class PollutionPredictor:
         # for feature in self.features_pollution:
         #    print(df[feature].head())
 
-        df.fillna(method="ffill", inplace=True)
-        df.fillna(method="bfill", inplace=True)
+        df.ffill(inplace=True)
+        df.bfill(inplace=True)
 
         # print(f"nan values in df: {df.isna().sum().sum()}")
 

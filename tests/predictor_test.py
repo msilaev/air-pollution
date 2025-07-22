@@ -4,7 +4,7 @@ Tests for pollution predictor model
 
 from unittest.mock import Mock, patch
 
-import numpy as np
+# Removed unused import
 import pandas as pd
 import pytest
 from sklearn.linear_model import Lasso
@@ -219,7 +219,7 @@ class TestPollutionPredictor:
         mock_client_instance.get_latest_versions.return_value = [mock_version]
         mock_client.return_value = mock_client_instance
 
-        result = predictor.load_model_from_mlflow()
+        predictor.load_model_from_mlflow()
 
         # The actual implementation doesn't return True/False, it loads the model
         assert predictor.model == mock_model
@@ -235,7 +235,7 @@ class TestPollutionPredictor:
 
         # This should raise an exception or handle gracefully
         try:
-            result = predictor.load_model_from_mlflow()
+            predictor.load_model_from_mlflow()
             # If no exception, model should still be None
             assert predictor.model is None
         except Exception:

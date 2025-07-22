@@ -1,6 +1,6 @@
 import logging
-from datetime import datetime
 import os
+from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 from mlflow import MlflowClient, set_tracking_uri
@@ -70,7 +70,7 @@ async def train_model():
                 detail=f"Insufficient data for training. Need at least {min_required_rows} rows, got {len(df)}.",
             )
 
-        #print(f"Loaded data with shape: {df.shape}")
+        # print(f"Loaded data with shape: {df.shape}")
 
         # Train the model
         metrics = predictor.train(df)
@@ -84,7 +84,7 @@ async def train_model():
 
 
 @router.get("/predict", response_model=PredictionResponse)
-async def predict_pollution(fetch_fresh_data: bool = False):
+async def predict_pollution(fetch_fresh_data: bool = False):  # noqa: C901
     """Generate pollution predictions for the next 6 hours"""
     try:
         # Only fetch fresh data if explicitly requested
@@ -126,7 +126,7 @@ async def predict_pollution(fetch_fresh_data: bool = False):
                 detail=f"Insufficient data for predictions. Need at least {min_required_rows} rows, got {len(df)}. Please refresh the data.",
             )
 
-        #print(f"Loaded data with shape: {df.shape}")
+        # print(f"Loaded data with shape: {df.shape}")
 
         # Load model if not already loaded
         if not predictor.model:
@@ -172,7 +172,7 @@ async def refresh_prediction_data():
 
 
 @router.get("/data/status")
-async def get_data_status():
+async def get_data_status():  # noqa: C901
     """Check the availability and status of training and prediction data"""
     status = {
         "training_data": {"available": False, "shape": None, "error": None},
@@ -223,7 +223,7 @@ async def get_data_status():
 
 
 @router.get("/model/info")
-async def get_model_info():
+async def get_model_info():  # noqa: C901
     """Get information about the current model including performance metrics"""
 
     # Try to load model if not already loaded

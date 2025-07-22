@@ -239,7 +239,7 @@ aws ce get-cost-and-usage \
    ```bash
    # Check task definition
    aws ecs describe-task-definition --task-definition air-pollution-api
-   
+
    # Check service events
    aws ecs describe-services --cluster air-pollution-cluster --services api-service
    ```
@@ -248,7 +248,7 @@ aws ce get-cost-and-usage \
    ```bash
    # Check RDS status
    aws rds describe-db-instances --db-instance-identifier air-pollution-db
-   
+
    # Test connectivity from ECS task
    aws ecs run-task --cluster air-pollution-cluster --task-definition troubleshoot
    ```

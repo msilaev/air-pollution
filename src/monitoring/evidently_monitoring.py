@@ -1,4 +1,4 @@
-import pandas as pd
+# import pandas as pd
 from evidently import ColumnMapping
 from evidently.metrics import DatasetDriftMetric
 from evidently.report import Report

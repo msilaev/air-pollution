@@ -3,12 +3,10 @@ Prefect flows for air pollution prediction MLOps pipeline
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict
 
-import pandas as pd
-from prefect import flow, task
-from prefect.task_runners import SequentialTaskRunner
+from prefect import task
 
 from src.config import USE_S3
 from src.data.data_ingestion import DataIngestion
@@ -31,10 +29,8 @@ def collect_training_data_task(
         )
 
         data_ingestion = DataIngestion(use_s3=USE_S3)
-        result = data_ingestion.fetch_pollution_data(
-            data_type="training",
-            chunk_size_hours=chunk_size_hours,
-            week_number=week_number,
+        data_ingestion.fetch_pollution_data(
+            chunk_size_hours=chunk_size_hours, week_number=week_number
         )
 
         # Load and validate the data
@@ -64,10 +60,8 @@ def collect_prediction_data_task(
         )
 
         data_ingestion = DataIngestion(use_s3=USE_S3)
-        result = data_ingestion.fetch_pollution_data(
-            data_type="predicting",
-            chunk_size_hours=chunk_size_hours,
-            week_number=week_number,
+        data_ingestion.fetch_pollution_data(
+            chunk_size_hours=chunk_size_hours, week_number=week_number
         )
 
         # Load and validate the data
@@ -177,13 +171,18 @@ def check_data_quality_task(data_type: str = "training") -> Dict[str, Any]:
             )
             * 100,
             "duplicate_rows": df.duplicated().sum(),
-            "timestamp_range": {  "start": (
-        df.index.min().isoformat() if hasattr(df.index.min(), "isoformat") else df.index.min()
-    ),
-    "end": (
-        df.index.max().isoformat() if hasattr(df.index.max(), "isoformat") else df.index.max()
-    ),
-},
+            "timestamp_range": {
+                "start": (
+                    df.index.min().isoformat()
+                    if hasattr(df.index.min(), "isoformat")
+                    else df.index.min()
+                ),
+                "end": (
+                    df.index.max().isoformat()
+                    if hasattr(df.index.max(), "isoformat")
+                    else df.index.max()
+                ),
+            },
         }
 
         # Quality thresholds

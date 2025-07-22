@@ -1,5 +1,3 @@
-import json
-import time
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -15,6 +13,7 @@ st.set_page_config(page_title="Air Pollution Predictor", page_icon="🌍", layou
 class AirPollutionDashboard:
     def __init__(self):
         import os
+
         self.api_base_url = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 
         # Station coordinates from your data collection
@@ -292,9 +291,9 @@ class AirPollutionDashboard:
             """
             )
 
-    def render_model_info_tab(self):
+    def render_model_info_tab(self):  # noqa: C901
         """Render model information tab"""
-        st.header("ℹ️ Model Information")
+        st.header("Model Information")
 
         model_info = self.get_model_info()
 
@@ -411,9 +410,9 @@ class AirPollutionDashboard:
 
                             dt = datetime.datetime.fromtimestamp(creation_time / 1000)
                             st.write(f"**Created:** {dt.strftime('%Y-%m-%d %H:%M')}")
-                        except:
+                        except Exception as e:
                             st.write(f"**Created:** {creation_time}")
-
+                            print(f"Error parsing creation time: {e}")
             # Performance Interpretation
             if metrics and not metrics.get("error"):
                 st.subheader("📈 Performance Interpretation")
@@ -523,7 +522,9 @@ class AirPollutionDashboard:
         fig.update_layout(
             mapbox_style="open-street-map",
             margin={"r": 0, "t": 50, "l": 0, "b": 0},
-            coloraxis_colorbar=dict(title="PM10 (μg/m³)"),  # <-- FIXED: removed titleside
+            coloraxis_colorbar=dict(
+                title="PM10 (μg/m³)"
+            ),  # <-- FIXED: removed titleside
         )
 
         return fig
@@ -573,7 +574,7 @@ class AirPollutionDashboard:
             st.metric("Avg PM10", f"{avg_pm10:.1f} μg/m³")
 
     # PREDICTION PLOTTING FUNCTIONS
-    def plot_predictions(self, predictions_data):
+    def plot_predictions(self, predictions_data):  # noqa: C901
         """Create prediction plots with historical context"""
 
         if not predictions_data or "predictions" not in predictions_data:
@@ -751,11 +752,11 @@ class AirPollutionDashboard:
                     display_columns = [
                         col for col in columns_to_show if col in display_pred.columns
                     ]
-                    # st.dataframe(
-                    #     display_pred[display_columns],
-                    #     use_container_width=True
-                    #     #hide_index=True,
-                    # )
+                    st.dataframe(
+                        display_pred[display_columns],
+                        use_container_width=True
+                        # hide_index=True,
+                    )
 
                 with col2:
                     if df_historical is not None and not df_historical.empty:
@@ -767,11 +768,11 @@ class AirPollutionDashboard:
                         display_hist["value"] = display_hist["value"].round(2)
                         # Show relevant columns
                         columns_to_show = ["timestamp", "pollutant", "station", "value"]
-                        display_columns = [
-                            col
-                            for col in columns_to_show
-                            if col in display_hist.columns
-                        ]
+                        # display_columns = [
+                        #    col
+                        #    for col in columns_to_show
+                        #    if col in display_hist.columns
+                        # ]
                         # st.dataframe(
                         #     display_hist[display_columns],
                         #     use_container_width=True
@@ -905,7 +906,9 @@ class AirPollutionDashboard:
             total_series = len(pollutants) * len(stations)
             st.metric("📊 Total Series", total_series)
 
-    def plot_by_pollutant_with_history(self, df_predictions, df_historical=None):
+    def plot_by_pollutant_with_history(
+        self, df_predictions, df_historical=None
+    ):  # noqa: C901
         """Plot each pollutant separately with multiple stations combined on the same panel"""
 
         # Get all pollutants from both datasets
@@ -916,11 +919,10 @@ class AirPollutionDashboard:
         # Color palette for stations
         station_colors = px.colors.qualitative.Set1
 
-        #print(pollutants)
+        # print(pollutants)
 
         for pollutant in sorted(pollutants, reverse=True):
-
-            #print("Plotting pollutant:", pollutant)
+            # print("Plotting pollutant:", pollutant)
             st.subheader(f"🌫️ {pollutant} - All Stations")
 
             fig = go.Figure()
@@ -1021,7 +1023,7 @@ class AirPollutionDashboard:
                         f"Warning: Could not add prediction start line for {pollutant}: {e}"
                     )
 
-            #print(f"Plotting {pollutant} for {len(all_stations)} stations")
+            # print(f"Plotting {pollutant} for {len(all_stations)} stations")
 
             fig.update_layout(
                 title=f"{pollutant} - All Monitoring Stations",
@@ -1034,30 +1036,28 @@ class AirPollutionDashboard:
                 ),
             )
 
-            #print(f"Plotting {pollutant} for {len(all_stations)} stations end")
+            # print(f"Plotting {pollutant} for {len(all_stations)} stations end")
 
             st.plotly_chart(fig, use_container_width=True)
 
-            #print(f"Plotting {pollutant} for {len(all_stations)} stations end")
+            # print(f"Plotting {pollutant} for {len(all_stations)} stations end")
 
             # Show station summary for this pollutant
             if not df_predictions.empty:
-                
                 st.write(f"**Stations with data for {pollutant}:** {len(all_stations)}")
 
                 # Create summary table for this pollutant
                 summary_data = []
-                
+
                 for station in all_stations:
-                    
-                    #print(f"Processing station: {station} for pollutant: {pollutant}")
+                    # print(f"Processing station: {station} for pollutant: {pollutant}")
                     pred_station_data = df_predictions[
                         (df_predictions["pollutant"] == pollutant)
                         & (df_predictions["station"] == station)
                     ]
 
-                    #print(f"Processing station: {station} for pollutant: {pollutant}")
-                    
+                    # print(f"Processing station: {station} for pollutant: {pollutant}")
+
                     if not pred_station_data.empty:
                         avg_pred = pred_station_data["value"].mean()
                         max_pred = pred_station_data["value"].max()
@@ -1072,14 +1072,15 @@ class AirPollutionDashboard:
                             }
                         )
 
-                    #print(f"Processing station: {station} for pollutant: {pollutant} end")
+                    # print(f"Processing station: {station} for pollutant: {pollutant} end")
 
                 if summary_data:
-                    #print(f"Adding summary for pollutant: {pollutant} start")
-                    df_summary = pd.DataFrame(summary_data)
-                    #st.dataframe(df_summary, use_container_width=True, hide_index=True)
-                    #st.dataframe(df_summary, use_container_width=True)
-                    #print(f"Adding summary for pollutant: {pollutant} end")
+                    pass
+                    # print(f"Adding summary for pollutant: {pollutant} start")
+                    # df_summary = pd.DataFrame(summary_data)
+                    # st.dataframe(df_summary, use_container_width=True, hide_index=True)
+                    # st.dataframe(df_summary, use_container_width=True)
+                    # print(f"Adding summary for pollutant: {pollutant} end")
 
     def plot_comparison_view_separate(self, df_predictions, df_historical):
         """Plot comparison between historical trends and predictions"""
@@ -1141,61 +1142,6 @@ class AirPollutionDashboard:
 
         col1, col2, col3, col4 = st.columns(4)
 
-        with col1:
-            if df_historical is not None and not df_historical.empty:
-                hist_avg = df_historical["value"].mean()
-                # st.metric("📈 Historical Avg", f"{hist_avg:.1f} μg/m³")
-            else:
-                pass
-                # st.metric("📈 Historical Avg", "N/A")
-
-        with col2:
-            pred_avg = df_predictions["value"].mean()
-            # st.metric("🔮 Predicted Avg", f"{pred_avg:.1f} μg/m³")
-
-        with col3:
-            if df_historical is not None and not df_historical.empty:
-                hist_avg = df_historical["value"].mean()
-                trend = pred_avg - hist_avg
-                trend_color = (
-                    "normal"
-                    if abs(trend) < 1
-                    else ("inverse" if trend > 0 else "normal")
-                )
-                # st.metric("📊 Trend", f"{trend:+.1f} μg/m³", delta_color=trend_color)
-            else:
-                pass
-                # st.metric("📊 Trend", "N/A")
-
-        with col4:
-            try:
-                if df_historical is not None and not df_historical.empty:
-                    # Fix timestamp calculation
-                    pred_max = df_predictions["timestamp"].max()
-                    hist_min = df_historical["timestamp"].min()
-
-                    # Ensure both are pandas Timestamps
-                    if pd.notna(pred_max) and pd.notna(hist_min):
-                        total_span = pred_max - hist_min
-                        hours = int(total_span.total_seconds() / 3600)
-                    else:
-                        hours = 0
-                else:
-                    pred_max = df_predictions["timestamp"].max()
-                    pred_min = df_predictions["timestamp"].min()
-
-                    if pd.notna(pred_max) and pd.notna(pred_min):
-                        total_span = pred_max - pred_min
-                        hours = int(total_span.total_seconds() / 3600)
-                    else:
-                        hours = 0
-
-                # st.metric("⏱️ Total Time Span", f"{hours} hours")
-            except Exception as e:
-                pass
-                # st.metric("⏱️ Total Time Span", "N/A")
-                # st.write(f"Debug: Time span calculation error: {e}")
-
         # Pollutant-specific comparison table
         if df_historical is not None and not df_historical.empty:
             st.subheader("🌫️ Pollutant Comparison")
@@ -1225,10 +1171,11 @@ class AirPollutionDashboard:
                     )
 
             if comparison_data:
-                df_comparison = pd.DataFrame(comparison_data)
-                #st.dataframe(df_comparison, use_container_width=True) #, hide_index=True)
+                pass
+                # df_comparison = pd.DataFrame(comparison_data)
+                # st.dataframe(df_comparison, use_container_width=True) #, hide_index=True)
 
-    def render_data_collection_tab(self):
+    def render_data_collection_tab(self):  # noqa: C901
         """Render data collection tab for training dataset creation"""
         st.header("📥 Data Collection & Training Dataset Creation")
 

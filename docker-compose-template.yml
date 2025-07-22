@@ -1,3 +1,4 @@
+
 version: '3.8'
 
 services:
@@ -20,12 +21,14 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
 
+
   # Prefect Server
   prefect-server:
     image: prefecthq/prefect:2-latest
     command: prefect server start --host 0.0.0.0
     ports:
       - "4200:4200"
+
 
   # Prefect Worker
   prefect-worker:
@@ -43,6 +46,7 @@ services:
     volumes:
       - ./app
     working_dir: /app
+
   # Air Pollution API
   api:
     build:
@@ -62,6 +66,7 @@ services:
       - ./data:/app/data
       - ./mlruns:/app/mlruns
 
+
   # Streamlit Dashboard
   dashboard:
     build:
@@ -73,5 +78,3 @@ services:
       - api
     environment:
       - API_BASE_URL=http://localhost:8000/api/v1
-
-

@@ -4,9 +4,9 @@ Tests for DataIngestion - only tests that use existing methods
 
 from unittest.mock import patch
 
-import pytest
-
 from src.data.data_ingestion import DataIngestion
+
+# Removed unused import
 
 
 class TestDataIngestion:
@@ -15,7 +15,7 @@ class TestDataIngestion:
     def test_init_local(self):
         """Test initialization with local mode"""
         ingestion = DataIngestion(use_s3=False)
-        assert ingestion.use_s3 == False
+        assert ingestion.use_s3 is False
         assert ingestion.address == "Helsinki"
         assert not hasattr(ingestion, "s3_client") or ingestion.s3_client is None
 
@@ -24,7 +24,7 @@ class TestDataIngestion:
         with patch.dict("os.environ", {"AWS_S3_DATA_BUCKET": "test-bucket"}):
             with patch("boto3.client", return_value=mock_s3_client):
                 ingestion = DataIngestion(use_s3=True)
-                assert ingestion.use_s3 == True
+                assert ingestion.use_s3 is True
                 assert ingestion.bucket == "test-bucket"
                 assert ingestion.s3_client is not None
 

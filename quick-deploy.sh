@@ -70,7 +70,7 @@ aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --
 # Build and push images
 for service in api dashboard prefect; do
     log_info "Building ${service} image..."
-    
+
     case $service in
         "api")
             dockerfile="Dockerfile.api"
@@ -82,14 +82,14 @@ for service in api dashboard prefect; do
             dockerfile="Dockerfile.prefect"
             ;;
     esac
-    
+
     local_tag="${PROJECT_NAME}/${service}:latest"
     remote_tag="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${PROJECT_NAME}/${service}:latest"
-    
+
     docker build -f $dockerfile -t $local_tag .
     docker tag $local_tag $remote_tag
     docker push $remote_tag
-    
+
     log_info "✓ Pushed ${service} image"
 done
 
@@ -150,7 +150,7 @@ if [ "$ALB_DNS" != "Not available" ]; then
     else
         log_warn "Health check failed - services may still be starting"
     fi
-    
+
     # Test prediction endpoint
     if curl -f -s -X POST "http://$ALB_DNS/predict" \
         -H "Content-Type: application/json" \
@@ -169,7 +169,7 @@ echo "🎉 Deployment completed successfully!"
 echo
 echo "Service URLs:"
 echo "  API:       http://$ALB_DNS"
-echo "  Dashboard: http://$ALB_DNS:8501" 
+echo "  Dashboard: http://$ALB_DNS:8501"
 echo "  MLflow:    http://$ALB_DNS:5000"
 echo "  Prefect:   http://$ALB_DNS:4200"
 echo

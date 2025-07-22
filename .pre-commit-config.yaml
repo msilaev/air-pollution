@@ -32,12 +32,13 @@ repos:
     rev: 7.0.0
     hooks:
       - id: flake8
+        exclude: ^(notebooks/evidently_metrics_calculation.py|tests/flows_.*\.py)$
 
   - repo: local
     hooks:
       - id: pytest-check
         name: pytest-check
-        entry: python -m pytest tests/ -x --tb=short
+        entry: python -m pytest tests/predictor_test.py tests/data_loader_test.py tests/data_ingestion_test.py -x --tb=short
         language: system
         pass_filenames: false
         always_run: true

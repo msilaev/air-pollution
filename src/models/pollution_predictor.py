@@ -1,6 +1,5 @@
 import json
 import os
-import subprocess
 import tempfile
 from datetime import datetime, timedelta
 
@@ -10,15 +9,13 @@ import mlflow
 import mlflow.sklearn
 import numpy as np
 import pandas as pd
-from dotenv import load_dotenv
 from mlflow.tracking import MlflowClient
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import Lasso, LinearRegression, Ridge
+from sklearn.linear_model import Lasso
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.multioutput import MultiOutputRegressor
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+
 from src.config import USE_S3
 
 
@@ -30,6 +27,7 @@ class PollutionPredictor:
         self.scaler = None
         self.features_pollution = None
         self.features_additional = ["hour_sin", "hour_cos", "day_sin", "day_cos"]
+        self.run_id = None
 
         # Initialize MLflow
         self.setup_mlflow()
@@ -41,8 +39,6 @@ class PollutionPredictor:
 
     def setup_mlflow(self):
         """Setup MLflow tracking URI and S3 endpoint if available"""
-        import mlflow
-        import os
         if USE_S3:
             tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
         else:
@@ -70,7 +66,7 @@ class PollutionPredictor:
                 experiment_id = experiment.experiment_id
             mlflow.set_experiment(experiment_id)
 
-        except Exception as e:
+        except (mlflow.exceptions.MlflowException, ValueError) as e:
             print(f"Failed to setup MLflow: {e}")
 
     def create_features(self, df):
@@ -78,7 +74,7 @@ class PollutionPredictor:
         df = df.copy()
         df["Timestamp"] = pd.to_datetime(df["Timestamp"])
 
-        #print(df.columns)
+        # print(df.columns)
 
         # Extract pollution features (PM10, PM2.5)
         self.features_pollution = [
@@ -96,7 +92,7 @@ class PollutionPredictor:
         df["day_sin"] = np.sin(2 * np.pi * days_of_week / 7)
         df["day_cos"] = np.cos(2 * np.pi * days_of_week / 7)
 
-        #for feature in self.features_pollution:
+        # for feature in self.features_pollution:
         #    print(df[feature].head())
 
         df.fillna(method="ffill", inplace=True)
@@ -140,7 +136,7 @@ class PollutionPredictor:
 
     def train(self, df):
         """Train model using your exact approach"""
-        #print(f"Training model with data shape: {df.shape}")
+        # print(f"Training model with data shape: {df.shape}")
 
         # Prepare sequences
         with mlflow.start_run() as run:
@@ -153,8 +149,12 @@ class PollutionPredictor:
 
             # Time series split (your exact logic)
             tscv = TimeSeriesSplit(n_splits=3)
-            for train_index, val_index in tscv.split(X):
-                pass  # Get the last split
+            train_index, val_index = None, None
+            for tr_idx, val_idx in tscv.split(X):
+                train_index, val_index = tr_idx, val_idx  # Get the last split
+
+            if train_index is None or val_index is None:
+                raise ValueError("TimeSeriesSplit did not produce train/val indices.")
 
             X_train, X_val = X[train_index], X[val_index]
             y_train, y_val = y[train_index], y[val_index]
@@ -212,7 +212,7 @@ class PollutionPredictor:
 
                 metadata_path = os.path.join(temp_dir, "model_metadata.json")
 
-                with open(metadata_path, "w") as f:
+                with open(metadata_path, "w", encoding="utf-8") as f:
                     json.dump(metadata, f, indent=2)
                 mlflow.log_artifact(metadata_path, "artifacts")
 
@@ -233,7 +233,7 @@ class PollutionPredictor:
             f"Model trained - MAE: {mae:.3f}, RMSE: {rmse:.3f}, R2: {accuracy_score:.3f}"
         )
         print(f"MLflow run ID: {self.run_id}")
-        print(f"Artifacts stored in S3")
+        print("Artifacts stored in S3")
         return metrics
 
     def load_model_from_mlflow(self, run_id=None, model_version=None):
@@ -272,27 +272,27 @@ class PollutionPredictor:
 
             # Download artifacts from S3
             with tempfile.TemporaryDirectory() as temp_dir:
-                # Download scaler - CORRECTED SYNTAX
+                # Download scaler
                 scaler_artifact_path = mlflow.artifacts.download_artifacts(
                     artifact_uri=f"runs:/{run_id}/artifacts/scaler.pkl",
                     dst_path=temp_dir,
                 )
                 self.scaler = joblib.load(scaler_artifact_path)
 
-                # Download features - CORRECTED SYNTAX
+                # Download features
                 features_artifact_path = mlflow.artifacts.download_artifacts(
                     artifact_uri=f"runs:/{run_id}/artifacts/features.pkl",
                     dst_path=temp_dir,
                 )
                 self.features_pollution = joblib.load(features_artifact_path)
 
-                # Download metadata - CORRECTED SYNTAX
+                # Download metadata
                 try:
                     metadata_artifact_path = mlflow.artifacts.download_artifacts(
                         artifact_uri=f"runs:/{run_id}/artifacts/model_metadata.json",
                         dst_path=temp_dir,
                     )
-                    with open(metadata_artifact_path, "r") as f:
+                    with open(metadata_artifact_path, "r", encoding="utf-8") as f:
                         metadata = json.load(f)
                     self.training_hours = metadata.get("training_hours", 24)
                     self.n_steps = metadata.get("n_steps", 6)
@@ -301,14 +301,18 @@ class PollutionPredictor:
                         ["hour_sin", "hour_cos", "day_sin", "day_cos"],
                     )
                     print("✓ Model metadata loaded successfully")
-                except Exception as metadata_error:
+                except (
+                    json.JSONDecodeError,
+                    FileNotFoundError,
+                    ValueError,
+                ) as metadata_error:
                     print(f"Warning: Could not load model metadata: {metadata_error}")
 
             print(f"✓ Model loaded from MLflow S3 artifacts: {model_uri}")
             print(f"✓ Run ID: {run_id}")
             return True
 
-        except Exception as e:
+        except (mlflow.exceptions.MlflowException, ValueError) as e:
             print(f"❌ Failed to load model from MLflow: {e}")
             return False
 
@@ -410,7 +414,7 @@ class PollutionPredictor:
                             "value": float(value),
                         }
                     )
-            except Exception as e:
+            except (IndexError, KeyError, ValueError):
                 # If there's an error with historical data for this feature, skip it
                 results["historical_data"][pollutant_station_key] = []
 

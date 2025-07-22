@@ -4,7 +4,6 @@ import time
 from datetime import datetime, timedelta
 
 import boto3
-import pandas as pd
 from prefect import flow, task
 
 from src.data.data_loader import DataLoader

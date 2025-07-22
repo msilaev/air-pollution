@@ -1,5 +1,3 @@
-import pandas as pd
-
 from src.config import USE_S3
 from src.data.data_loader import DataLoader
 

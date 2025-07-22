@@ -1,7 +1,6 @@
 import datetime as dt
 
 import numpy as np
-from geopy.geocoders import Nominatim
 
 from .wfs import download_stored_query
 
@@ -39,8 +38,7 @@ def get_air_pollution_data(latitude_city, longitude_city, square_side=100, time=
 
     """
     # Get current time and define time range for weather data retrieval
-
-    if time == None:
+    if time is None:
         end_time = dt.datetime.utcnow()
     else:
         end_time = time
@@ -142,12 +140,12 @@ def get_air_pollution_data_timeInterval(
 
     """
     # Get current time and define time range for weather data retrieval
-    if end == None:
+    if end is None:
         end_time = dt.datetime.now()
     else:
         end_time = end
 
-    if start == None:
+    if start is None:
         start_time = end_time - dt.timedelta(minutes=100)
     else:
         start_time = start
@@ -244,8 +242,7 @@ def get_weather_data(latitude_city, longitude_city, square_side=5, time=None):
 
     """
     # Get current time and define time range for weather data retrieval
-
-    if time == None:
+    if time is None:
         end_time = dt.datetime.utcnow()
     else:
         end_time = time
@@ -340,12 +337,12 @@ def get_weather_data_timeInterval(
 
     """
     # Get current time and define time range for weather data retrieval
-    if end == None:
+    if end is None:
         end_time = dt.datetime.now()
     else:
         end_time = end
 
-    if start == None:
+    if start is None:
         start_time = end_time - dt.timedelta(minutes=100)
     else:
         start_time = start

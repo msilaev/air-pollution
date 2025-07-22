@@ -165,7 +165,7 @@ python -c "from flows.main_flows import training_pipeline_flow; training_pipelin
 ```
 
 
-### Docker Installation & Orchestration 
+### Docker Installation & Orchestration
 > **Note:** Before starting, replace `docker-compose-template.yml` with `docker-compose.yml` and fill in your real AWS credentials in the environment variables section.
 
 #### 1. Build and start all services with Docker Compose:

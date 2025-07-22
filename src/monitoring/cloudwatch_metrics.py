@@ -1,7 +1,8 @@
-from datetime import datetime
-from typing import Any, Dict
+# from datetime import datetime
 
 import boto3
+
+# from typing import Any, Dict
 
 
 class CloudWatchMetrics:

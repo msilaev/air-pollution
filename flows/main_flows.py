@@ -3,7 +3,7 @@ Main Prefect flows for MLOps pipeline
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from prefect import flow
 from prefect.task_runners import SequentialTaskRunner

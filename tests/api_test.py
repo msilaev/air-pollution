@@ -4,11 +4,10 @@ Tests API functions directly instead of using HTTP requests
 """
 
 from datetime import datetime
-from unittest.mock import Mock, patch
 
-import numpy as np
-import pandas as pd
 import pytest
+
+# Removed unused imports
 
 # Test basic API route functions directly instead of using TestClient
 # to avoid version compatibility issues

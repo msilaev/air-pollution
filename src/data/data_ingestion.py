@@ -1,22 +1,25 @@
 import datetime as dt
 import io
-import json
 import logging
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import boto3
-import matplotlib
 import pandas as pd
-import requests
 from geopy.geocoders import Nominatim
 
-from src.config import INTERIM_DATA_DIR, PROJ_ROOT, RAW_DATA_DIR
+from scripts.data_from_stations import get_air_pollution_data_timeInterval
+from src.config import (  # DO NOT MODIFY: Required for imports
+    INTERIM_DATA_DIR,
+    PROJ_ROOT,
+    RAW_DATA_DIR,
+)
+
+sys.path.append(PROJ_ROOT)  # DO NOT MODIFY: Required for imports
+
 
 sys.path.append(PROJ_ROOT)
-
-from scripts.data_from_stations import get_air_pollution_data_timeInterval
 
 
 class DataIngestion:
@@ -25,7 +28,9 @@ class DataIngestion:
         self.address = address
         self.use_s3 = use_s3
 
-        print(f"DataIngestion initialized with use_s3={self.use_s3}, address={self.address}")
+        print(
+            f"DataIngestion initialized with use_s3={self.use_s3}, address={self.address}"
+        )
         if use_s3:
             self.s3_client = boto3.client("s3")
             self.bucket = os.environ.get("AWS_S3_DATA_BUCKET", "air-pollution-data")
@@ -52,7 +57,7 @@ class DataIngestion:
 
     def fetch_pollution_data(
         self, data_type="training", chunk_size_hours=24 * 7, week_number=8
-    ):
+    ):  # noqa: C901
         """Fetch latest pollution data from APIs (from your notebook logic)"""
         try:
             geolocator = Nominatim(user_agent="ny_explorer")
@@ -133,7 +138,7 @@ class DataIngestion:
                         df_air_pollution, how="outer", on="Timestamp"
                     )  # , suffixes=('', f'_{station}'))
 
-                ## Save to parquet file with station name in the filename
+                # Save to parquet file with station name in the filename
                 if self.use_s3:
                     filename = f"training_data/{station.replace(' ', '_')}_air_pollution_data_{data_type}.parquet"
                     self.upload_to_s3(merged_df, filename)
@@ -154,7 +159,7 @@ class DataIngestion:
             self.logger.error(f"Failed to fetch data: {e}")
             raise
 
-        ## Save to parquet file with station name in the filename
+        # Save to parquet file with station name in the filename
         if self.use_s3:
             filename = f"{data_type}_data/air_pollution_data_{data_type}_total.parquet"
             self.upload_to_s3(df_air_pollution_total, filename)
@@ -173,8 +178,6 @@ class DataIngestion:
         """Upload DataFrame to S3 as parquet file"""
         try:
             s3_client = boto3.client("s3")
-            session = boto3.Session()
-            credentials = session.get_credentials()
 
             bucket = os.environ.get("AWS_S3_BUCKET_NAME", "air-pollution-models")
             bucket = bucket.replace("s3://", "").strip()

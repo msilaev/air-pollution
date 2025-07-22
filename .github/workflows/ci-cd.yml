@@ -1,15 +1,21 @@
-name: CI/CD Pipeline for Air Pollution Prediction
+name: CI-CD Pipeline for Air Pollution Prediction
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - main
+      - master
+      - develop
   pull_request:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
+
 
 permissions:
   id-token: write
   contents: read
+
 
 env:
   AWS_REGION: us-east-1
@@ -18,150 +24,180 @@ env:
   ECR_REPOSITORY_PREFECT: air-pollution-prefect
 
 jobs:
+
   test:
     name: Run Tests
     runs-on: ubuntu-latest
 
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
 
-    - name: Cache pip dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov flake8 black isort
 
-    - name: Run code formatting checks
-      run: |
-        black --check .
-        isort --check-only .
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Run tests
-      run: |
-        pytest tests/ -v --cov=src --cov-report=xml
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov flake8 black isort
+
+
+      - name: Run code formatting checks
+        run: |
+          black --check .
+          isort --check-only .
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --cov=src --cov-report=xml
+
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
 
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
 
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
 
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-        sarif_file: 'trivy-results.sarif'
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
 
   build-and-deploy:
     name: Build and Deploy
-    needs: [test, security-scan]
+    needs:
+      - test
+      - security-scan
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-    - name: Build and push API image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -f Dockerfile.api -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-    - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: 1.5.0
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Terraform Init
-      run: |
-        cd infrastructure/terraform
-        terraform init
 
-    - name: Terraform Plan
-      run: |
-        cd infrastructure/terraform
-        terraform plan -var="db_password=${{ secrets.DB_PASSWORD }}" -out=tfplan
+      - name: Build and push API image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -f Dockerfile.api -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-    - name: Terraform Apply
-      run: |
-        cd infrastructure/terraform
-        terraform apply -auto-approve tfplan
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+
+      - name: Terraform Init
+        run: |
+          cd infrastructure/terraform
+          terraform init
+
+
+      - name: Terraform Plan
+        run: |
+          cd infrastructure/terraform
+          terraform plan -var="db_password=${{ secrets.DB_PASSWORD }}" -out=tfplan
+
+
+      - name: Terraform Apply
+        run: |
+          cd infrastructure/terraform
+          terraform apply -auto-approve tfplan
+
 
   deploy-prefect:
     name: Deploy Prefect Flows
-    needs: [build-and-deploy]
+    needs:
+      - build-and-deploy
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install prefect
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: Configure Prefect
-      env:
-        PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
-        PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY }}
-      run: |
-        prefect config set PREFECT_API_URL=$PREFECT_API_URL
-        prefect config set PREFECT_API_KEY=$PREFECT_API_KEY
 
-    - name: Deploy Prefect flows
-      run: |
-        python flows/deployments.py
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install prefect
+
+
+      - name: Configure Prefect
+        env:
+          PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
+          PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY }}
+        run: |
+          prefect config set PREFECT_API_URL=$PREFECT_API_URL
+          prefect config set PREFECT_API_KEY=$PREFECT_API_KEY
+
+
+      - name: Deploy Prefect flows
+        run: |
+          python flows/deployments.py

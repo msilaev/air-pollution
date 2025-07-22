@@ -1,9 +1,5 @@
-import os
-
 import boto3
-import pandas as pd
 from prefect import flow, task
-from prefect.blocks.system import Secret
 
 from src.data.data_loader import DataLoader
 from src.models.pollution_predictor import PollutionPredictor
@@ -72,7 +68,6 @@ def training_flow():
     df = load_training_data()
 
     # Check data drift
-    drift_results = check_data_drift(df)
 
     # Train model
     training_results = train_pollution_model(df)

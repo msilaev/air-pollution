@@ -1,14 +1,10 @@
 import datetime
-import io
-import logging
 import random
 import time
-import uuid
 
 import joblib
 import pandas as pd
 import psycopg
-import pytz
 from evidently import ColumnMapping
 from evidently.metrics import (
     ColumnDriftMetric,
@@ -29,10 +25,10 @@ rand = random.Random()
 create_table_statement = """
 drop table if exists dummy_metrics;
 create table dummy_metrics(
-	timestamp timestamp,
-	prediction_drift float,
-	num_drifted_columns integer,
-	share_missing_values float
+    timestamp timestamp,
+    prediction_drift float,
+    num_drifted_columns integer,
+    share_missing_values float
 )
 """
 

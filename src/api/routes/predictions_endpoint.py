@@ -294,9 +294,9 @@ async def get_model_info():  # noqa: C901
                     "error"
                 ] = f"Could not retrieve metrics: {str(mlflow_error)}"
         else:
-            model_info[
-                "error"
-            ] = "No model is currently loaded. Please train a model first or check MLflow for available models."
+            model_info["error"] = (
+                "No model is currently loaded. Please train a model first or check MLflow for available models."
+            )
 
     except Exception as e:
         model_info["error"] = f"Error getting model info: {str(e)}"

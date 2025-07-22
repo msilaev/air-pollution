@@ -1281,6 +1281,7 @@ class AirPollutionDashboard:
         st.divider()
 
         # Weather Data Collection Section
+        # TEST: Trigger CI/CD pipeline
         st.subheader("🌤️ Weather Data Collection")
 
         col1, col2 = st.columns([2, 1])

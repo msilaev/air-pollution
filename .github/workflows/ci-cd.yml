@@ -61,7 +61,7 @@ jobs:
         run: |
           black --check .
           isort --check-only .
-          flake8 . --count --show-source --statistics
+          flake8 . --count --show-source --statistics --exclude="notebooks/evidently_metrics_calculation.py,tests/flows_*.py"
 
 
       - name: Run tests

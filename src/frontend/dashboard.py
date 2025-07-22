@@ -1290,7 +1290,8 @@ class AirPollutionDashboard:
 
             if st.button("🌡️ Collect Weather Data", key="collect_weather"):
                 with st.spinner("Checking weather data collection..."):
-                    result = self.collect_weather_data()
+                    self.collect_weather_data()
+                    result = None
                     if result:
                         if result.get("status") == "info":
                             st.info(f"ℹ️ {result.get('message')}")

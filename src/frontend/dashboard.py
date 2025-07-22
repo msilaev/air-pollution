@@ -754,7 +754,7 @@ class AirPollutionDashboard:
                     ]
                     st.dataframe(
                         display_pred[display_columns],
-                        use_container_width=True
+                        use_container_width=True,
                         # hide_index=True,
                     )
 
